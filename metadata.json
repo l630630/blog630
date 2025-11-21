@@ -1,0 +1,5 @@
+{
+  "name": "Lumina Portfolio",
+  "description": "A high-performance, interactive 3D personal portfolio featuring glassmorphism design, Three.js backgrounds, and GSAP animations.",
+  "requestFramePermissions": []
+}
