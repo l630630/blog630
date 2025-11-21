@@ -1,7 +1,7 @@
 import React from 'react';
 import { PROJECTS } from '../constants';
 
-const ProjectCard = ({ project }: { project: any }) => {
+const ProjectCard: React.FC<{ project: any }> = ({ project }) => {
   // Simple vanilla JS tilt logic on mouse move
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;

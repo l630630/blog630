@@ -4,7 +4,7 @@ import { Points, PointMaterial, Stars, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { BackgroundMode } from '../types';
 
-// Fix TypeScript errors for R3F intrinsic elements if needed in environment
+// Fix TypeScript errors for R3F intrinsic elements and standard HTML elements
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -12,6 +12,7 @@ declare global {
       mesh: any;
       planeGeometry: any;
       meshBasicMaterial: any;
+      [elemName: string]: any;
     }
   }
 }

@@ -29,7 +29,8 @@ function App() {
 
       {/* Content Overlay */}
       <div className="relative z-10 flex flex-col">
-        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+        {/* Pass bgMode to Navbar so it can switch music */}
+        <Navbar isDark={isDark} toggleTheme={toggleTheme} bgMode={bgMode} />
         
         <main>
           <Hero />

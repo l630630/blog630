@@ -9,6 +9,7 @@ const LOCAL_STORAGE_KEY = 'lumina_hero_image';
 
 const Hero: React.FC = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const nameRef = useRef<HTMLSpanElement>(null); // Specifically for the name scramble
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
@@ -62,46 +63,94 @@ const Hero: React.FC = () => {
     }
   };
 
-  // GSAP Animations
+  // Advanced GSAP Entrance Animations
   useEffect(() => {
     if (!gsap || !containerRef.current) return;
     
     const ctx = gsap.context(() => {
-        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+        const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
 
-        // Ensure elements are visible before animating
-        gsap.set([imageRef.current, titleRef.current, subtitleRef.current, buttonRef.current], { visibility: 'visible' });
+        // Helper: Text Scramble Effect
+        const scrambleText = (element: HTMLElement, finalText: string, duration: number = 1.5) => {
+            const chars = "!<>-_\\/[]{}—=+*^?#________";
+            const obj = { p: 0 };
+            
+            gsap.to(obj, {
+                p: 1,
+                duration: duration,
+                ease: "power4.inOut",
+                onUpdate: () => {
+                    const progress = Math.floor(obj.p * finalText.length);
+                    let str = finalText.substring(0, progress);
+                    for (let i = progress; i < finalText.length; i++) {
+                        // Add random char if not finished
+                        str += (Math.random() > 0.5) ? chars[Math.floor(Math.random() * chars.length)] : '';
+                    }
+                    element.innerText = str;
+                },
+                onComplete: () => {
+                    element.innerText = finalText;
+                }
+            });
+        };
 
+        // 1. Initial Setup
+        gsap.set(containerRef.current, { visibility: 'visible' });
+        gsap.set(titleRef.current?.children || [], { opacity: 0, y: 20 });
+        gsap.set(subtitleRef.current, { clipPath: 'polygon(0 0, 0 100%, 0 100%, 0 0)', opacity: 1 }); // Hidden by clip-path
+        gsap.set(buttonRef.current, { opacity: 0, y: 20 });
+        gsap.set(imageRef.current, { scale: 0, opacity: 0, filter: 'blur(20px) brightness(2)' });
+
+        // 2. Animation Sequence
+        
+        // Step A: Avatar "Teleport" Entry (Scale + Blur/Brightness Glitch)
         if (imageRef.current) {
-            tl.fromTo(imageRef.current,
-                { scale: 0.8, opacity: 0, rotation: -5 },
-                { scale: 1, opacity: 1, rotation: 0, duration: 1.5, delay: 0.5 }
-            );
+            tl.to(imageRef.current, {
+                scale: 1,
+                opacity: 1,
+                filter: 'blur(0px) brightness(1)',
+                duration: 1.5,
+                ease: "elastic.out(1, 0.5)"
+            });
         }
 
+        // Step B: Staggered Text Entry
         if (titleRef.current) {
-            tl.fromTo(titleRef.current, 
-                { y: 50, opacity: 0, skewY: 7 },
-                { y: 0, opacity: 1, skewY: 0, duration: 1.2 },
-                "-=1.2"
-            );
+            // "Hello, I am" fade in
+            tl.to(titleRef.current.firstElementChild, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8
+            }, "-=1.2");
+
+            // Name Scramble Trigger
+            tl.call(() => {
+                if (nameRef.current) {
+                    nameRef.current.style.opacity = '1';
+                    scrambleText(nameRef.current, "张健");
+                }
+            }, [], "-=0.8");
         }
 
+        // Step C: Subtitle Swipe Reveal (Cyberpunk scan effect)
         if (subtitleRef.current) {
-            tl.fromTo(subtitleRef.current,
-                { opacity: 0, x: -20 },
-                { opacity: 1, x: 0, duration: 1 },
-                "-=1.0"
-            );
+            tl.to(subtitleRef.current, {
+                clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
+                duration: 1.2,
+                ease: "expo.inOut"
+            }, "-=1.0");
         }
 
+        // Step D: Buttons Pop in
         if (buttonRef.current) {
-            tl.fromTo(buttonRef.current,
-                { scale: 0.8, opacity: 0 },
-                { scale: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.3)" },
-                "-=0.8"
-            );
+            tl.to(buttonRef.current, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                ease: "back.out(1.7)"
+            }, "-=0.8");
         }
+
     }, containerRef);
 
     return () => ctx.revert();
@@ -125,21 +174,21 @@ const Hero: React.FC = () => {
   };
 
   return (
-    <section id="hero" ref={containerRef} className="min-h-screen flex items-center justify-center relative pt-20 pb-10 overflow-hidden">
+    <section id="hero" ref={containerRef} className="min-h-screen flex items-center justify-center relative pt-20 pb-10 overflow-hidden invisible">
       <div className="container mx-auto px-6 flex flex-col-reverse lg:flex-row items-center gap-12 lg:gap-20">
         
         {/* Text Content */}
         <div className="lg:w-1/2 text-center lg:text-left z-10">
-          <h1 ref={titleRef} className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-6 tracking-tight opacity-0">
-            你好，我是 <br />
-            <span className="text-gradient">张健</span>
+          <h1 ref={titleRef} className="text-5xl md:text-7xl font-heading font-bold leading-tight mb-6 tracking-tight">
+            <span className="block text-slate-800 dark:text-slate-100">你好，我是</span>
+            <span ref={nameRef} className="text-gradient inline-block min-w-[150px] opacity-0"></span>
           </h1>
-          <p ref={subtitleRef} className="text-lg md:text-xl opacity-0 mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+          <p ref={subtitleRef} className="text-lg md:text-xl mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed relative">
              一位热衷于打造沉浸式 Web 体验的<span className="text-neon-blue font-bold">创意开发者</span>。
              我将艺术设计与前沿技术融合，构建通往未来的数字桥梁。
           </p>
           
-          <div ref={buttonRef} className="flex flex-wrap justify-center lg:justify-start gap-4 opacity-0">
+          <div ref={buttonRef} className="flex flex-wrap justify-center lg:justify-start gap-4">
              <Magnetic>
                 <a href="#projects" className="px-8 py-4 bg-white dark:bg-white text-slate-900 rounded-full font-bold text-lg shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(0,243,255,0.5)] transition-all duration-300">
                   浏览作品
@@ -155,7 +204,7 @@ const Hero: React.FC = () => {
 
         {/* Image / Avatar Area */}
         <div className="lg:w-1/2 flex justify-center z-10 relative">
-            <div ref={imageRef} className="relative w-72 h-72 md:w-96 md:h-96 opacity-0">
+            <div ref={imageRef} className="relative w-72 h-72 md:w-96 md:h-96">
                 {/* Decorative rings */}
                 <div className="absolute inset-0 rounded-full border-2 border-neon-blue/30 animate-[spin_10s_linear_infinite]"></div>
                 <div className="absolute -inset-4 rounded-full border border-neon-purple/20 animate-[spin_15s_linear_infinite_reverse]"></div>
